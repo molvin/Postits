@@ -6,36 +6,49 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Threading;
+
 using System.Windows.Forms;
 
 namespace PostIts
 {
     public partial class PostItForm : Form
     {
+        public int Id;
         private const int cGrip = 16;      // Grip size
         private const int cCaption = 32;   // Caption bar height;
-        private int indentLevel = 0;
         private const int IndentStep = 20;
-        private bool strike = false;
 
-        public PostItForm()
+        public PostItForm(int id, string rtf, bool select, Point? location, Size? size)
         {
             InitializeComponent();
+            //Window style
             FormBorderStyle = FormBorderStyle.None;
             DoubleBuffered = true;
             SetStyle(ControlStyles.FixedWidth, true);
-
-            ExitButton.Click += Exit;
-            NewWindowButton.Click += NewWindow;
-
-            TextBox.KeyDown += TextBoxKeyDown;
-
             TextBox.AcceptsTab = true;
             TextBox.DetectUrls = true;
             TextBox.ScrollBars = RichTextBoxScrollBars.Vertical;
-            TextBox.Select();
-        }
+            if (select)
+                TextBox.Select();
+            //Callbacks
+            ExitButton.Click += (x,y) => Close();
+            NewWindowButton.Click += (x, y) => Program.NewWindow();
+            Move += (x, y) => Save();
+            SizeChanged += (x, y) => Save();
+            TextBox.KeyDown += TextBoxKeyDown;
+            //Save data                   
+            Id = id;
+            TextBox.Rtf = rtf;
+            if(location != null)
+            {
+                StartPosition = FormStartPosition.Manual;
+                Location = location.Value;
+            }
+            if(size != null)
+            {
+                Size = size.Value;
+            }
+        }                                 
         protected override void OnPaint(PaintEventArgs e)
         {
             Rectangle rc = new Rectangle(ClientSize.Width - cGrip, ClientSize.Height - cGrip, cGrip, cGrip);
@@ -54,7 +67,7 @@ namespace PostIts
                     m.Result = (IntPtr)2;  // HTCAPTION
                     return;
                 }
-                if (pos.X >= this.ClientSize.Width - cGrip && pos.Y >= this.ClientSize.Height - cGrip)
+                if (pos.X >= ClientSize.Width - cGrip && pos.Y >= ClientSize.Height - cGrip)
                 {
                     m.Result = (IntPtr)17; // HTBOTTOMRIGHT
                     return;
@@ -62,32 +75,37 @@ namespace PostIts
             }
             base.WndProc(ref m);
         }
-
-        private void Exit(object sender, EventArgs e)
-        {
-            Close();
-        }
-        private void NewWindow(object sender, EventArgs e)
-        {
-            Thread thread = new Thread(() => Application.Run(new PostItForm()));
-            thread.Start();
-        }
-
         private void TextBoxKeyDown(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.K && e.Control)
-            {
-                TextBox.SelectionFont = new Font(TextBox.SelectionFont, FontStyle.Strikeout);
-                e.Handled = true;
-                e.SuppressKeyPress = true;
-                strike = true;
+            Strike(e);
+            HandleList(e);
+            Save();
+        }
+        private void Strike(KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.K || !e.Control)
                 return;
-            }
+            
+            if(TextBox.SelectionLength == 0)
             {
-                strike = false;
-                TextBox.SelectionFont = new Font(TextBox.SelectionFont, FontStyle.Regular);
+                int lineIndex = TextBox.GetLineFromCharIndex(TextBox.SelectionStart);
+                int startIndex = 0;
+                for(int i = 0; i < lineIndex; i++)
+                {
+                    startIndex += TextBox.Lines[i].Length + 1;
+                }
+                TextBox.Select(startIndex, TextBox.Lines[lineIndex].Length);
+                Console.WriteLine(startIndex + " " + TextBox.SelectionStart);
             }
 
+            TextBox.SelectionFont = new Font(TextBox.SelectionFont, TextBox.SelectionFont.Strikeout ? FontStyle.Regular : FontStyle.Strikeout);
+            e.Handled = true;
+            e.SuppressKeyPress = true;
+            TextBox.Select(TextBox.SelectionStart + TextBox.SelectionLength, 0);
+            TextBox.SelectionFont = new Font(TextBox.SelectionFont, FontStyle.Regular);       
+        }
+        private void HandleList(KeyEventArgs e)
+        {
             if (TextBox.SelectionBullet)
             {
                 if (e.KeyCode == Keys.Tab)
@@ -112,7 +130,7 @@ namespace PostIts
             if (line.Length != 0 && !fullSelect)
                 return;
             
-            indentLevel = Math.Max(indentLevel + (e.Shift ? -1 : 1), 0);            
+            int indentLevel = Math.Max(TextBox.SelectionIndent / IndentStep + (e.Shift ? -1 : 1), 0);            
             TextBox.SelectionIndent = indentLevel * IndentStep;
             e.SuppressKeyPress = true;
             e.Handled = true;       
@@ -127,8 +145,7 @@ namespace PostIts
                 return;
 
             TextBox.SelectionBullet = false;
-            indentLevel = 0;
-            TextBox.SelectionIndent = indentLevel * IndentStep;
+            TextBox.SelectionIndent = 0;
             e.SuppressKeyPress = true;
             e.Handled = true;
         }
@@ -138,6 +155,9 @@ namespace PostIts
             e.SuppressKeyPress = true;
             e.Handled = true;
         }
-
+        private void Save()
+        {
+            SaveManager.Save(Id, TextBox.Rtf, Location.X, Location.Y, Size.Width, Size.Height);
+        }
     }
 }

@@ -40,14 +40,15 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.TextBox.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.TextBox.BorderStyle = System.Windows.Forms.BorderStyle.None;
-            this.TextBox.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.TextBox.Font = new System.Drawing.Font("Segoe UI Semibold", 11.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.TextBox.ForeColor = System.Drawing.Color.Ivory;
             this.TextBox.Location = new System.Drawing.Point(12, 36);
             this.TextBox.MinimumSize = new System.Drawing.Size(10, 10);
             this.TextBox.Name = "TextBox";
+            this.TextBox.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.ForcedVertical;
             this.TextBox.Size = new System.Drawing.Size(260, 213);
             this.TextBox.TabIndex = 2;
-            this.TextBox.Text = "";
+            this.TextBox.Text = "dgsdfgsdfg";
             // 
             // ExitButton
             // 
