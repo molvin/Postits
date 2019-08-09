@@ -91,6 +91,7 @@
             this.ShowIcon = false;
             this.Text = "Form1";
             this.ResumeLayout(false);
+            this.ShowInTaskbar = false;
 
         }
 

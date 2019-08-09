@@ -5,7 +5,7 @@ using System.Data;
 using System.Drawing;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
+using System.Threading;
 
 using System.Windows.Forms;
 
@@ -17,6 +17,7 @@ namespace PostIts
         private const int cGrip = 16;      // Grip size
         private const int cCaption = 32;   // Caption bar height;
         private const int IndentStep = 20;
+        public SynchronizationContext Context { get; private set; }
 
         public PostItForm(int id, string rtf, bool select, Point? location, Size? size)
         {
@@ -30,9 +31,13 @@ namespace PostIts
             TextBox.ScrollBars = RichTextBoxScrollBars.Vertical;
             if (select)
                 TextBox.Select();
+
+            Context = SynchronizationContext.Current;
+            ManagerForm.AddContextForm(Context, this);
+
             //Callbacks
-            ExitButton.Click += (x,y) => Close();
-            NewWindowButton.Click += (x, y) => Program.NewWindow();
+            ExitButton.Click += (x,y) => Exit();
+            NewWindowButton.Click += (x, y) => ManagerForm.NewWindow();
             Move += (x, y) => Save();
             SizeChanged += (x, y) => Save();
             TextBox.KeyDown += TextBoxKeyDown;
@@ -158,6 +163,11 @@ namespace PostIts
         private void Save()
         {
             SaveManager.Save(Id, TextBox.Rtf, Location.X, Location.Y, Size.Width, Size.Height);
+        }
+        private void Exit()
+        {
+            ManagerForm.OnCloseForm(Id);
+            Close();
         }
     }
 }
