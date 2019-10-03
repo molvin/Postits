@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
@@ -17,6 +18,7 @@ namespace PostIts
         private static int IdCounter = 0;
         private static readonly List<(SynchronizationContext, PostItForm)> contextForms = new List<(SynchronizationContext, PostItForm)>();
         private static readonly HashSet<int> openForms = new HashSet<int>();
+        private bool activated;
 
         public ManagerForm()
         {
@@ -39,13 +41,27 @@ namespace PostIts
                 NewWindow(save.Id, save.RichText, select, new Point(save.X, save.Y), new Size(save.Width, save.Height));
                 select = false;
             }
-
-            Activated += (x, y) => OnFocus();
             contextInstance = SynchronizationContext.Current;
+            FormClosed += (x, y) => PostToForms(form => form.Close());
+            
         }
+
+        protected override void OnLostFocus(EventArgs e)
+        {
+            Console.WriteLine("Lost focus");
+            base.OnLostFocus(e);
+        }
+        protected override void OnGotFocus(EventArgs e)
+        {
+            Console.WriteLine("Got focus");
+            PostToForms(form => form.Activate());
+            base.OnGotFocus(e);
+        }
+
         private void ManagerForm_Load(object sender, EventArgs e)
         {
-            Size = new Size(0, 0);
+            Size = new Size(100, 100);
+            Opacity = 0.0f;
         }
         public static void NewWindow()
         {
@@ -67,15 +83,32 @@ namespace PostIts
             if (openForms.Count == 0)
                 contextInstance.Post(new SendOrPostCallback(s => instance.Close()), null);               
         }
-        private void OnFocus()
+
+        private void ShowForms(bool show)
         {
-            foreach((SynchronizationContext context, PostItForm form) in contextForms)
+            if (show)
             {
-                context.Post(new SendOrPostCallback(Sync), form);
+                PostToForms(form => form.Show());
+                PostToForms(form => form.Activate());
+                PostToForms(form => form.BringToFront());
+
             }
+            else
+                PostToForms(form => form.Hide());
+        }
+        private void PostToForms(Action<PostItForm> action)
+        {
+            lock(contextForms)
+            {
+                foreach ((SynchronizationContext context, PostItForm form) in contextForms)
+                {
+                    context.Post(new SendOrPostCallback(Sync), form);
+                }
+            }
+     
             void Sync(object state)
             {
-                (state as PostItForm).Activate();
+                action?.Invoke(state as PostItForm);
             }
         }
     }

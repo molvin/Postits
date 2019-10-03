@@ -31,6 +31,7 @@
             this.TextBox = new System.Windows.Forms.RichTextBox();
             this.ExitButton = new System.Windows.Forms.Button();
             this.NewWindowButton = new System.Windows.Forms.Button();
+            this.SaveWindowButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // TextBox
@@ -71,6 +72,16 @@
             this.NewWindowButton.TabIndex = 3;
             this.NewWindowButton.UseVisualStyleBackColor = false;
             // 
+            // SaveWindowButton
+            // 
+            this.SaveWindowButton.BackColor = System.Drawing.Color.DarkGray;
+            this.SaveWindowButton.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
+            this.SaveWindowButton.Location = new System.Drawing.Point(40, 5);
+            this.SaveWindowButton.Name = "NewWindowButton";
+            this.SaveWindowButton.Size = new System.Drawing.Size(25, 25);
+            this.SaveWindowButton.TabIndex = 3;
+            this.SaveWindowButton.UseVisualStyleBackColor = false;
+            // 
             // PostItForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -78,6 +89,7 @@
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(64)))), ((int)(((byte)(64)))), ((int)(((byte)(64)))));
             this.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
             this.ClientSize = new System.Drawing.Size(284, 261);
+            this.Controls.Add(this.SaveWindowButton);
             this.Controls.Add(this.NewWindowButton);
             this.Controls.Add(this.ExitButton);
             this.Controls.Add(this.TextBox);
@@ -99,6 +111,7 @@
         private System.Windows.Forms.RichTextBox TextBox;
         private System.Windows.Forms.Button ExitButton;
         private System.Windows.Forms.Button NewWindowButton;
+        private System.Windows.Forms.Button SaveWindowButton;
     }
 }
 

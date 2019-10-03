@@ -18,6 +18,16 @@ namespace PostIts
         private const int cCaption = 32;   // Caption bar height;
         private const int IndentStep = 20;
         public SynchronizationContext Context { get; private set; }
+        protected override CreateParams CreateParams
+        {
+            get
+            {
+                CreateParams cp = base.CreateParams;
+                // turn on WS_EX_TOOLWINDOW style bit
+                cp.ExStyle |= 0x80;
+                return cp;
+            }
+        }
 
         public PostItForm(int id, string rtf, bool select, Point? location, Size? size)
         {
@@ -31,6 +41,8 @@ namespace PostIts
             TextBox.ScrollBars = RichTextBoxScrollBars.Vertical;
             if (select)
                 TextBox.Select();
+
+            Activate();
 
             Context = SynchronizationContext.Current;
             ManagerForm.AddContextForm(Context, this);
@@ -169,5 +181,6 @@ namespace PostIts
             ManagerForm.OnCloseForm(Id);
             Close();
         }
+
     }
 }
