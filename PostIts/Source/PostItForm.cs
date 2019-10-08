@@ -50,6 +50,7 @@ namespace PostIts
             //Callbacks
             ExitButton.Click += (x,y) => Exit();
             NewWindowButton.Click += (x, y) => ManagerForm.NewWindow();
+            SaveWindowButton.Click += (x,y) => SavesForm.OpenSavesForm();
             Move += (x, y) => Save();
             SizeChanged += (x, y) => Save();
             TextBox.KeyDown += TextBoxKeyDown;
@@ -172,13 +173,14 @@ namespace PostIts
             e.SuppressKeyPress = true;
             e.Handled = true;
         }
-        private void Save()
+        private void Save(bool open = true)
         {
-            SaveManager.Save(Id, TextBox.Rtf, Location.X, Location.Y, Size.Width, Size.Height);
+            SaveManager.Save(Id, TextBox.Rtf, Location.X, Location.Y, Size.Width, Size.Height, open);
         }
         private void Exit()
         {
             ManagerForm.OnCloseForm(Id);
+            Save(false);
             Close();
         }
 

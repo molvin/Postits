@@ -9,9 +9,9 @@ namespace PostIts
     {
         private static readonly string RootPath = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments) + "/Postits";
 
-        public static void Save(int id, string rtf, int x, int y, int width, int height)
+        public static void Save(int id, string rtf, int x, int y, int width, int height, bool open)
         {
-            SaveData data = new SaveData { Id = id, RichText = rtf, X = x, Y = y, Width = width, Height = height };
+            SaveData data = new SaveData { Id = id, RichText = rtf, X = x, Y = y, Width = width, Height = height, Open = open};
             string json = JsonConvert.SerializeObject(data);
 
             string path = Path.Combine(RootPath, $"Postit{id}.json");
@@ -29,6 +29,18 @@ namespace PostIts
             {
                 writer.Write(json);
             }
+        }
+        public static void Delete(int id)
+        {
+            if (!Directory.Exists(RootPath))
+                return;
+
+            string path = Path.Combine(RootPath, $"Postit{id}.json");
+
+            if (!File.Exists(path))
+                return;
+
+            File.Delete(path);
         }
         public static List<SaveData> LoadFiles()
         {
@@ -62,6 +74,7 @@ namespace PostIts
             public int Y;
             public int Width;
             public int Height;
+            public bool Open;
         }
     }
 }

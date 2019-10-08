@@ -18,7 +18,6 @@ namespace PostIts
         private static int IdCounter = 0;
         private static readonly List<(SynchronizationContext, PostItForm)> contextForms = new List<(SynchronizationContext, PostItForm)>();
         private static readonly HashSet<int> openForms = new HashSet<int>();
-        private bool activated;
 
         public ManagerForm()
         {
@@ -38,9 +37,13 @@ namespace PostIts
             bool select = true;
             foreach (SaveManager.SaveData save in postits)
             {
+                if (!save.Open) continue;
                 NewWindow(save.Id, save.RichText, select, new Point(save.X, save.Y), new Size(save.Width, save.Height));
                 select = false;
             }
+            if (select)
+                SavesForm.OpenSavesForm();
+
             contextInstance = SynchronizationContext.Current;
             FormClosed += (x, y) => PostToForms(form => form.Close());
             
@@ -69,6 +72,7 @@ namespace PostIts
         }
         public static void NewWindow(int id, string rtf, bool select, Point? point, Size? size)
         {
+            if (openForms.Contains(id)) return;
             openForms.Add(id);
             Thread thread = new Thread(() => Application.Run(new PostItForm(id, rtf, select, point, size)));
             thread.Start();
@@ -77,11 +81,13 @@ namespace PostIts
         {
             contextForms.Add((context, form));
         }
-        public static void OnCloseForm(int formId)
+        public static bool OnCloseForm(int formId)
         {
             openForms.Remove(formId);
-            if (openForms.Count == 0)
-                contextInstance.Post(new SendOrPostCallback(s => instance.Close()), null);               
+            if (openForms.Count > 0)
+                return false;
+            contextInstance.Post(new SendOrPostCallback(s => instance.Close()), null);
+            return true;
         }
 
         private void ShowForms(bool show)
