@@ -16,8 +16,11 @@ namespace PostIts
         private static ManagerForm instance;
         private static SynchronizationContext contextInstance;
         private static int IdCounter = 0;
-        private static readonly List<(SynchronizationContext, PostItForm)> contextForms = new List<(SynchronizationContext, PostItForm)>();
-        private static readonly HashSet<int> openForms = new HashSet<int>();
+        //private static readonly List<(SynchronizationContext, PostItForm)> contextForms = new List<(SynchronizationContext, PostItForm)>();
+        //private static readonly HashSet<int> openForms = new HashSet<int>();
+        private static readonly Dictionary<int, SynchronizationContext> contextForms = new Dictionary<int, SynchronizationContext>();
+        private static readonly Dictionary<int, PostItForm> openForms = new Dictionary<int, PostItForm>();
+
 
         public ManagerForm()
         {
@@ -72,22 +75,41 @@ namespace PostIts
         }
         public static void NewWindow(int id, string rtf, bool select, Point? point, Size? size)
         {
-            if (openForms.Contains(id)) return;
-            openForms.Add(id);
+            if (openForms.ContainsKey(id)) return;
             Thread thread = new Thread(() => Application.Run(new PostItForm(id, rtf, select, point, size)));
+
             thread.Start();
         }
         public static void AddContextForm(SynchronizationContext context, PostItForm form)
         {
-            contextForms.Add((context, form));
+            lock(openForms)
+            {
+                openForms.Add(form.Id, form);
+            }
+            lock(contextForms)
+            {
+                contextForms.Add(form.Id, context);
+            }
         }
         public static bool OnCloseForm(int formId)
         {
             openForms.Remove(formId);
+            contextForms.Remove(formId);
             if (openForms.Count > 0)
                 return false;
             contextInstance.Post(new SendOrPostCallback(s => instance.Close()), null);
             return true;
+        }
+        public static void OnDeleteForm(int formId)
+        {
+            if (!openForms.ContainsKey(formId))
+                return;
+
+
+            lock(contextForms)
+            {
+                contextForms[formId].Post(new SendOrPostCallback(state => (state as PostItForm).Exit(false)), openForms[formId]);
+            }
         }
 
         private void ShowForms(bool show)
@@ -106,9 +128,10 @@ namespace PostIts
         {
             lock(contextForms)
             {
-                foreach ((SynchronizationContext context, PostItForm form) in contextForms)
+                foreach (var pair in contextForms)
                 {
-                    context.Post(new SendOrPostCallback(Sync), form);
+                    if(openForms.ContainsKey(pair.Key))
+                        pair.Value.Post(new SendOrPostCallback(Sync), openForms[pair.Key]);
                 }
             }
      

@@ -45,7 +45,6 @@ namespace PostIts
             Activate();
 
             Context = SynchronizationContext.Current;
-            ManagerForm.AddContextForm(Context, this);
 
             //Callbacks
             ExitButton.Click += (x,y) => Exit();
@@ -57,6 +56,7 @@ namespace PostIts
             //Save data                   
             Id = id;
             TextBox.Rtf = rtf;
+            TextBox.TextChanged += TextUpdated;
             if(location != null)
             {
                 StartPosition = FormStartPosition.Manual;
@@ -66,7 +66,8 @@ namespace PostIts
             {
                 Size = size.Value;
             }
-        }                                 
+            ManagerForm.AddContextForm(Context, this);
+        }
         protected override void OnPaint(PaintEventArgs e)
         {
             Rectangle rc = new Rectangle(ClientSize.Width - cGrip, ClientSize.Height - cGrip, cGrip, cGrip);
@@ -97,6 +98,10 @@ namespace PostIts
         {
             Strike(e);
             HandleList(e);
+            Save();
+        }
+        private void TextUpdated(object sender, EventArgs e)
+        {
             Save();
         }
         private void Strike(KeyEventArgs e)
@@ -177,10 +182,11 @@ namespace PostIts
         {
             SaveManager.Save(Id, TextBox.Rtf, Location.X, Location.Y, Size.Width, Size.Height, open);
         }
-        private void Exit()
+        public void Exit(bool save = true)
         {
             ManagerForm.OnCloseForm(Id);
-            Save(false);
+            if(save)
+                Save(false);
             Close();
         }
 

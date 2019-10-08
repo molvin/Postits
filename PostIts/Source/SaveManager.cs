@@ -41,6 +41,7 @@ namespace PostIts
                 return;
 
             File.Delete(path);
+            ManagerForm.OnDeleteForm(id);
         }
         public static List<SaveData> LoadFiles()
         {
